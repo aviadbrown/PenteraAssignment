@@ -14,11 +14,10 @@ RUN poetry config virtualenvs.create false && \
     poetry install --no-dev --no-root
 
 # Copy application files
-COPY ./app/app.py .
+COPY ./app/ .
 
 # Expose port 8000
 EXPOSE 8000
 
 # Run the application
 CMD ["uvicorn" ,"app:app", "--host", "0.0.0.0", "--port", "8000"]
-
