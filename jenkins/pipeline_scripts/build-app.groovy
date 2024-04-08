@@ -1,5 +1,6 @@
 #!/usr/bin/env groovy
 
+// Create a logger class to print colored logs
 public final class Logger implements Serializable {
 
     def script
@@ -35,7 +36,7 @@ logger = new Logger(this)
 // Define Initial Variables
 String slaveName = "master" // TODO: Add option to run on other slave dynamically. Now hardcoded to master as there is no slave configured
 
-
+// Define the pipeline parameters
 properties([
         parameters([
                 choice(name: 'selectedVersionType', choices: ['', 'patch', 'minor', 'major'], description: 'Choose a bump type for the version'),
@@ -74,7 +75,7 @@ ansiColor('xterm') {
                     stage('Creating venv & Install poetry') {
                         curr_stage = env.STAGE_NAME
                         logger.info("Creating venv & Installing poetry...")
-                        withPythonEnv('python3.11') {
+                        withPythonEnv('python3.11') { // Installing poetry in a virtual environment
                             sh "pip install poetry"
                         }
                     }
@@ -142,14 +143,14 @@ ansiColor('xterm') {
 def bumpPoetryVersion(bumpType) {
     logger.debug("Bumping the version with type: ${bumpType}")
     withPythonEnv('python3.11') {
-        sh "poetry version ${bumpType}"
+        sh "poetry version ${bumpType}" // Use poetry to bump the version
     }
 }
 
 String getPoetryVersion() {
     String version
     withPythonEnv('python3.11') {
-        version = sh(script: "poetry version -s", returnStdout: true).trim()
+        version = sh(script: "poetry version -s", returnStdout: true).trim() // Get the version from poetry
     }
     logger.debug("Poetry version: ${version}")
     return version
@@ -157,7 +158,7 @@ String getPoetryVersion() {
 
 def buildDockerImage(String dockerImageTag) {
     logger.info("Building the Docker image with tag: ${dockerImageTag}")
-    sh "docker build --no-cache -t ${dockerImageTag} ."
+    sh "docker build --no-cache -t ${dockerImageTag} ." // Build the Docker image - use no-cache to make sure the latest code is used
     logger.info("Docker image built successfully")
 }
 
@@ -169,7 +170,6 @@ def dockerhubLogin() {
 
 def pushDockerImage(String dockerImageTag) {
     logger.info("Pushing the Docker image with tag: ${dockerImageTag}")
-    // Push the Docker image to a registry
     sh "docker push ${dockerImageTag}"
     logger.info("Docker image pushed successfully")
 }
@@ -177,6 +177,7 @@ def pushDockerImage(String dockerImageTag) {
 def pushToGithub() {
     sshagent(credentials: ["github-ssh"]) {
         try {
+            // Script to push to github - add ssh key to known hosts & set git user
             sh """
               if ! test -d ~/.ssh
               then
