@@ -1,23 +1,37 @@
-FROM python:3.11-slim
+# Build base image
+FROM python:3.11-slim AS base
 
-MAINTAINER "aviad.brown"
-
-# Install poetry
+# install poetry
 RUN pip install poetry
 
 # Set working directory
 WORKDIR /app
 
-# Copy and install application dependencies
+# Copy only pyproject.toml for poetry usage to leverage build caching
 COPY pyproject.toml ./
-RUN poetry config virtualenvs.create false && \
+
+# Install python dependencies
+RUN python3.11 -m venv .venv && \
+    . .venv/bin/activate && \
     poetry install --no-dev --no-root
 
 # Copy application files
-COPY ./app/ .
+COPY ./app .
 
-# Expose port 8000
+# Build final image
+FROM python:3.11-slim AS final
+
+# Set working directory
+WORKDIR /app
+
+# Copy application & venv files from base image
+COPY --from=base /app /app
+
+# Set python environment variables
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Expose port 8000 for the application
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn" ,"app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the web application
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
