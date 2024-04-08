@@ -53,6 +53,7 @@ ansiColor('xterm') {
 
     currentBuild.displayName = "#${env.BUILD_NUMBER}-${params.selectedVersionType}-bump"
 
+    def curr_stage = ""
 
     timeout(time: 15, unit: 'MINUTES') {
         timestamps {
@@ -60,6 +61,7 @@ ansiColor('xterm') {
                 try {
                     logger.info("Starting - selectedVersionType: ${params.selectedVersionType}, publishVersion: ${params.publishVersion}")
                     stage('Checkout app repo') {
+                        curr_stage = env.STAGE_NAME
                         checkout scmGit(
                                   branches: [[name: "*/main"]], // TODO: Add option to choose another branch
                                   doGenerateSubmoduleConfigurations: false,
@@ -69,8 +71,8 @@ ansiColor('xterm') {
                         )
                     }
 
-                    sh "ls -a"
                     stage('Creating venv & Install poetry') {
+                        curr_stage = env.STAGE_NAME
                         logger.info("Creating venv & Installing poetry...")
                         withPythonEnv('python3.11') {
                             sh "pip install poetry"
@@ -78,6 +80,7 @@ ansiColor('xterm') {
                     }
 
                     stage('Bump app version') {
+                        curr_stage = env.STAGE_NAME
                         String prevVersion = getPoetryVersion()
                         logger.info("----------> Prev app version: ${prevVersion}")
 
@@ -98,10 +101,12 @@ ansiColor('xterm') {
                     logger.info("----------> The new Docker image tag: ${dockerImageTag}")
 
                     stage('Build Docker image') {
+                        curr_stage = env.STAGE_NAME
                         buildDockerImage(dockerImageTag)
                     }
 
                     stage('Push Docker image to registry') {
+                        curr_stage = env.STAGE_NAME
                         if (params.publishVersion.toBoolean()) {
                             dockerhubLogin()
                             pushDockerImage(dockerImageTag)
@@ -111,13 +116,15 @@ ansiColor('xterm') {
                     }
 
                     stage('Push changes to the repo') {
+                        curr_stage = env.STAGE_NAME
                         if (params.publishVersion.toBoolean()) {
                             pushToGithub()
                         } else {
                             logger.info("Skipping the push to the repo")
                         }
                     }
-
+                    logger.success("Build completed successfully")
+                    currentBuild.result = 'SUCCESS'
                 } catch (Exception e) {
                     currentBuild.result = 'FAILED'
                     def errMsg = "ERROR: An error occurred in stage '${env.STAGE_NAME}': ${e}"
