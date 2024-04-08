@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "app"
+version = "0.0.2"
+description = "Simple Python web app - Pentera assignment"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+uvicorn = "^0.29.0"
+fastapi = "^0.110.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
