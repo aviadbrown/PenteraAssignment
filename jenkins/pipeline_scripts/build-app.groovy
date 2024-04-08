@@ -103,6 +103,7 @@ ansiColor('xterm') {
 
                     stage('Push Docker image to registry') {
                         if (params.publishVersion.toBoolean()) {
+                            dockerhubLogin()
                             pushDockerImage(dockerImageTag)
                         } else {
                             logger.info("Skipping the push to the registry")
@@ -111,7 +112,7 @@ ansiColor('xterm') {
 
                     stage('Push changes to the repo') {
                         if (params.publishVersion.toBoolean()) {
-                            pushToGithub(newVersion)
+                            pushToGithub()
                         } else {
                             logger.info("Skipping the push to the repo")
                         }
@@ -149,13 +150,15 @@ String getPoetryVersion() {
 
 def buildDockerImage(String dockerImageTag) {
     logger.info("Building the Docker image with tag: ${dockerImageTag}")
-    // Build the Docker image using the specified tag
-//    docker.withRegistry('', "${dockerhub_creds_id}") {
-//        slaveImage = docker.build("${dockerImageTag} .")
-//        sh "rm -rf ${WORKSPACE}/Dokerfiles/deploymentbox/artifactory_token"
-//    }
-    sh "docker build -t ${dockerImageTag} ."
+    sh "docker build --no-cache -t ${dockerImageTag} ."
     logger.info("Docker image built successfully")
+}
+
+def dockerhubLogin() {
+    withCredentials([string(credentialsId: 'dockerhub-pass', variable: 'DOCKERHUB_PASS')]) {
+        def DOCKERHUB_USER = "aviadbrown"
+        sh "echo ${DOCKERHUB_PASS} | docker login -u ${DOCKERHUB_USER} --password-stdin"
+    }
 }
 
 def pushDockerImage(String dockerImageTag) {
@@ -165,10 +168,34 @@ def pushDockerImage(String dockerImageTag) {
     logger.info("Docker image pushed successfully")
 }
 
-def pushToGithub(newVersion) {
-    sh """
-        git add .
-        sh "git commit -m 'Bump version to ${newVersion}'"
-        sh "git push origin main"
-    """
+def pushToGithub() {
+    sshagent(credentials: ["github-ssh"]) {
+        try {
+            sh """
+              if ! test -d ~/.ssh
+              then
+                 mkdir ~/.ssh
+                 ssh-keyscan -t rsa,dsa github.com >> ~/.ssh/known_hosts
+              fi
+    
+              git config user.name aviadbrown
+              git config user.email aviad.brown@gmail.com
+              
+              git stash
+              git checkout main
+              
+              git pull
+              git stash apply --index || true
+              git status
+              git add .
+              git commit -m 'Bump version to ${newVersion}' . || true
+              git push origin main
+          """
+        }
+        catch (err) {
+            env.ERROR_MSG = err.getMessage()
+            echo "ERROR MESSAGE: ${env.ERROR_MSG}"
+            throw err
+        }
+    }
 }

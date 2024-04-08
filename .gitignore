@@ -1,0 +1,13 @@
+.idea
+.idea/*
+.vscode
+__pycache__
+GITHUB_ENV
+
+# virtualenv
+venv
+.venv
+venv/
+ENV/
+
+*.docx
