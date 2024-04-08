@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "app"
-version = "0.1.0"
+version = "0.1.1"
 description = "Simple Python web app - Pentera assignment"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
