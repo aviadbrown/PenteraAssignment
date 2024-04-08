@@ -156,7 +156,6 @@ def buildDockerImage(String dockerImageTag) {
 
 def dockerhubLogin() {
     withCredentials([string(credentialsId: 'dockerhub-pass', variable: 'DOCKERHUB_PASS')]) {
-        def DOCKERHUB_USER = "aviadbrown"
         sh "echo ${DOCKERHUB_PASS} | docker login -u ${DOCKERHUB_USER} --password-stdin"
     }
 }
@@ -178,8 +177,8 @@ def pushToGithub() {
                  ssh-keyscan -t rsa,dsa github.com >> ~/.ssh/known_hosts
               fi
     
-              git config user.name aviadbrown
-              git config user.email aviad.brown@gmail.com
+              git config user.name ${GIITHUB_USER}
+              git config user.email ${GITHUB_EMAIL}
               
               git stash
               git checkout main
