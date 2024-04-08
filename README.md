@@ -29,3 +29,22 @@ In order to start develop using the poetry, use this steps:
 If you need to add a package, you should use this command: `poetry add <package_name>` 
 
 ## Deployment Process
+The final deployment process done within a Jenkins pipeline called app-builder.
+The pipeline stages:
+1. Checkout the code from git
+2. Bump the version of the app with the required bumping using poetry - major, minor, or patch.
+3. Build the docker image with the new version as the tag.
+4. Push the docker image to the docker hub if the flag `publishVersion` is true.
+5. Push the version bumping changes to git if the flag `publishVersion` is true.
+
+The docker image sits in dockerhub, in the public repo `aviadbrown/pentera-web-app:tagname`: https://hub.docker.com/repository/docker/aviadbrown/pentera-web-app/general
+
+## Testing Deployment
+In order to test the deployment, you can use the following steps:
+1. Clone this repo.
+2. In terminal, enter to test folder: `cd test`
+3. Run the following command: `IMAGE_TAG={required_version} docker-compose up`
+4. In terminal you should see the log in console (wait few seconds): 
+`test-1     | API call successful (HTTP 200 OK) and output is correct
+test-1 exited with code 0`
+5. If you see the above message, the deployment is successful. Otherwise, there is a failure in the deployment.
