@@ -10,7 +10,7 @@ Pre-requisites:
 python pre-requisites:
 - Fastapi
 - Uvicorn
-- poetry
+- Poetry
 
 Jenkins plugins & pre-requisites:
 - SSH Agent: https://plugins.jenkins.io/ssh-agent/
@@ -49,10 +49,15 @@ In order to test the deployment, you can use the following steps:
 1. Clone this repo.
 2. In terminal, enter to test folder: `cd test`
 3. Run the following command: `IMAGE_TAG={required_version} docker-compose up`
-4. In terminal you should see the log in console (wait few seconds): 
-`test-1     | API call successful (HTTP 200 OK) and output is correct
-test-1 exited with code 0`
+4. In terminal you should see the log in console (wait few seconds):
+
+`test-1     | API call successful (HTTP 200 OK) and output is correct`
+
+`test-1 exited with code 0`
+
 5. If you see the above message, the deployment is successful. Otherwise, there is a failure in the deployment.
+6. To exit, just press `ctrl+c` and run `docker-compose down`.
 
 TODO:
 1. Get rid of all hardcoded values.
+2. Add some Github Actions for CI/CD.
